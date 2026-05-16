@@ -149,7 +149,7 @@
   name: (identifier) @variable)
 
 (assignment_statement
-  left: (identifier) @variable)
+  (identifier) @variable)
 
 (for_statement
   variable: (identifier) @variable)
