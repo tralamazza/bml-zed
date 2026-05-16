@@ -57,6 +57,8 @@ module.exports = grammar({
       $.struct_definition,
       $.enum_definition,
       $.peripheral_definition,
+      $.register_definition,
+      $.field_definition,
       $.import_statement,
       $.export_statement,
     ),
@@ -564,7 +566,7 @@ module.exports = grammar({
       return token(new RegExp(`0[xX][0-9a-fA-F_]+${suffix}?|[0-9][0-9_]*${suffix}?`));
     },
 
-    float_literal: $ => /[0-9][0-9_]*\.[0-9][0-9_]*[hfdHFD]?/,
+    float_literal: $ => /[0-9][0-9_]*\.[0-9][0-9_]*([eE][+-]?[0-9][0-9_]*)?[hfdHFD]?/,
 
     boolean_literal: $ => choice('true', 'false'),
 

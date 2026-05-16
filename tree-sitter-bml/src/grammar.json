@@ -43,6 +43,14 @@
         },
         {
           "type": "SYMBOL",
+          "name": "register_definition"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "field_definition"
+        },
+        {
+          "type": "SYMBOL",
           "name": "import_statement"
         },
         {
@@ -3100,7 +3108,7 @@
     },
     "float_literal": {
       "type": "PATTERN",
-      "value": "[0-9][0-9_]*\\.[0-9][0-9_]*[hfdHFD]?"
+      "value": "[0-9][0-9_]*\\.[0-9][0-9_]*([eE][+-]?[0-9][0-9_]*)?[hfdHFD]?"
     },
     "boolean_literal": {
       "type": "CHOICE",

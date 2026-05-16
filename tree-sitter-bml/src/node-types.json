@@ -5764,6 +5764,10 @@
           "named": true
         },
         {
+          "type": "field_definition",
+          "named": true
+        },
+        {
           "type": "function_definition",
           "named": true
         },
@@ -5773,6 +5777,10 @@
         },
         {
           "type": "peripheral_definition",
+          "named": true
+        },
+        {
+          "type": "register_definition",
           "named": true
         },
         {
