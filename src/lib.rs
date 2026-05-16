@@ -1,5 +1,6 @@
 use std::fs;
-use zed_extension_api::{self as zed, settings::LspSettings, LanguageServerId, Result};
+use std::path::PathBuf;
+use zed_extension_api::{self as zed, serde_json, settings::LspSettings, LanguageServerId, Result};
 
 struct BmlExtension {
     cached_binary_path: Option<String>,
@@ -32,27 +33,11 @@ impl BmlExtension {
             }
         }
 
-        // Try building from source
-        let cargo = worktree
-            .which("cargo")
-            .ok_or_else(|| "cargo not found. Install Rust to build bml-lsp.".to_string())?;
-
-        let bml_dir = worktree
-            .root_path()
+        // Look for pre-built binary nearby
+        let bml_dir = std::path::Path::new(&worktree.root_path())
             .parent()
             .map(|p| p.join("bml"))
-            .or_else(|| {
-                // Try relative to extension
-                Some(
-                    std::path::PathBuf::from(
-                        std::env::var("ZED_EXTENSION_DIR").unwrap_or_default(),
-                    )
-                    .parent()
-                    .map(|p| p.join("bml"))
-                    .unwrap_or_else(|| std::path::PathBuf::from("../bml")),
-                )
-            })
-            .ok_or_else(|| "cannot find bml source directory".to_string())?;
+            .unwrap_or_else(|| PathBuf::from("../bml"));
 
         // Check if bml-lsp binary already exists
         for profile in ["release", "debug"] {
