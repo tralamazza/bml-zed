@@ -12,7 +12,7 @@
 
 ; Struct definition as class
 (struct_definition
-  body: (_) @class.inside) @class.around
+  (_) @class.inside) @class.around
 
 ; Enum definition as class
 (enum_definition) @class.around
