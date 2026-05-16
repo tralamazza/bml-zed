@@ -148,9 +148,6 @@
 (variable_declaration
   name: (identifier) @variable)
 
-(assignment_statement
-  (identifier) @variable)
-
 (for_statement
   variable: (identifier) @variable)
 
