@@ -3405,6 +3405,10 @@
         {
           "type": "integer_literal",
           "named": true
+        },
+        {
+          "type": "named_type",
+          "named": true
         }
       ]
     }
@@ -6788,10 +6792,6 @@
   },
   {
     "type": "bit",
-    "named": false
-  },
-  {
-    "type": "bits",
     "named": false
   },
   {

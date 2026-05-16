@@ -883,6 +883,22 @@
           "value": ":"
         },
         {
+          "type": "SYMBOL",
+          "name": "named_type"
+        },
+        {
+          "type": "STRING",
+          "value": "bit"
+        },
+        {
+          "type": "STRING",
+          "value": "["
+        },
+        {
+          "type": "SYMBOL",
+          "name": "integer_literal"
+        },
+        {
           "type": "CHOICE",
           "members": [
             {
@@ -890,52 +906,22 @@
               "members": [
                 {
                   "type": "STRING",
-                  "value": "bit"
-                },
-                {
-                  "type": "STRING",
-                  "value": "["
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "integer_literal"
-                },
-                {
-                  "type": "STRING",
-                  "value": "]"
-                }
-              ]
-            },
-            {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "STRING",
-                  "value": "bits"
-                },
-                {
-                  "type": "STRING",
-                  "value": "["
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "integer_literal"
-                },
-                {
-                  "type": "STRING",
                   "value": ".."
                 },
                 {
                   "type": "SYMBOL",
                   "name": "integer_literal"
-                },
-                {
-                  "type": "STRING",
-                  "value": "]"
                 }
               ]
+            },
+            {
+              "type": "BLANK"
             }
           ]
+        },
+        {
+          "type": "STRING",
+          "value": "]"
         }
       ]
     },

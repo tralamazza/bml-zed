@@ -211,10 +211,12 @@ module.exports = grammar({
       'field',
       field('name', $.identifier),
       ':',
-      choice(
-        seq('bit', '[', $.integer_literal, ']'),
-        seq('bits', '[', $.integer_literal, '..', $.integer_literal, ']'),
-      ),
+      $.named_type,
+      'bit',
+      '[',
+      $.integer_literal,
+      optional(seq('..', $.integer_literal)),
+      ']',
     ),
 
     // ─── Import / Export ──────────────────────────────────────────

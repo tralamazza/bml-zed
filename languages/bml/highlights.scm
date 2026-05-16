@@ -12,7 +12,6 @@
   "at"
   "offset"
   "bit"
-  "bits"
   "as"
   "if"
   "else"
