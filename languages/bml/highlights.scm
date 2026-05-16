@@ -30,7 +30,6 @@
   "sizeof"
   "match"
   "mut"
-  "null"
   "true"
   "false"
   "asm"
@@ -38,7 +37,6 @@
   "thread"
   "isr"
   "priority"
-  "any"
   "dma"
   "external"
   "shared"
@@ -117,9 +115,8 @@
 (enum_definition name: (identifier) @type)
 (peripheral_definition name: (identifier) @type)
 
-; Type annotations
-(type_annotation
-  (named_type) @type)
+; Type annotations - named types used as type references
+(named_type) @type
 
 ; Enum variant type prefix
 (enum_variant_expression

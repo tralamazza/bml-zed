@@ -310,8 +310,8 @@ module.exports = grammar({
     ),
 
     return_statement: $ => seq('return', optional(field('value', $._expression)), ';'),
-    break_statement: $ => 'break;',
-    continue_statement: $ => 'continue;',
+    break_statement: $ => seq('break', ';'),
+    continue_statement: $ => seq('continue', ';'),
 
     match_statement: $ => seq(
       'match',
