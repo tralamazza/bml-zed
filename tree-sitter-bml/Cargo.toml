@@ -1,0 +1,14 @@
+[package]
+name = "tree-sitter-bml"
+version = "0.1.0"
+edition = "2021"
+description = "BML grammar for tree-sitter"
+
+[lib]
+path = "bindings/rust/lib.rs"
+
+[dependencies]
+tree-sitter = "~0.24.0"
+
+[build-dependencies]
+cc = "1"

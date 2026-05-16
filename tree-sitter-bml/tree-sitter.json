@@ -1,0 +1,17 @@
+{
+  "grammars": [
+    {
+      "name": "bml",
+      "path": ".",
+      "scope": "source.bml",
+      "file-types": ["bml"],
+      "highlights": "../bml-zed/languages/bml/highlights.scm",
+      "injection-regex": "^bml$"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "BML grammar for tree-sitter"
+  }
+}

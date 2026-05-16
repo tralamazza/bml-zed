@@ -1,0 +1,15 @@
+id = "bml"
+name = "BML"
+description = "BML (Bare Metal Language) support for Zed. Provides syntax highlighting, LSP integration, and more for embedded systems development."
+version = "0.1.0"
+schema_version = 1
+authors = ["BML Contributors"]
+repository = "https://github.com/tralamazza/bml-zed"
+
+[grammars.bml]
+repository = "file:///home/tralamazza/github/tralamazza/compiler_ideas/bml-zed/tree-sitter-bml"
+rev = "HEAD"
+
+[language_servers.bml-lsp]
+name = "bml-lsp"
+languages = ["BML"]

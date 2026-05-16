@@ -1,0 +1,25 @@
+{
+  "name": "tree-sitter-bml",
+  "version": "0.1.0",
+  "description": "BML grammar for tree-sitter",
+  "main": "bindings/node",
+  "types": "bindings/node",
+  "scripts": {
+    "build": "tree-sitter generate",
+    "test": "tree-sitter test",
+    "parse": "tree-sitter parse"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.bml",
+      "file-types": ["bml"],
+      "injection-regex": "^bml$"
+    }
+  ],
+  "dependencies": {
+    "node-addon-api": "^8.0.0"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.24.0"
+  }
+}
