@@ -8,7 +8,7 @@ repository = "https://github.com/tralamazza/bml-zed"
 
 [grammars.bml]
 repository = "file:///home/tralamazza/github/tralamazza/compiler_ideas/bml-zed/tree-sitter-bml"
-rev = "HEAD"
+rev = "master"
 
 [language_servers.bml-lsp]
 name = "bml-lsp"
