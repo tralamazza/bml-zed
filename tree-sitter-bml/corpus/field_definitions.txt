@@ -24,6 +24,32 @@ field MODER0: u32 bit[0..1]
   (integer_literal))
 
 ==================
+Field with readonly access
+==================
+field BSY: b1 bit[0] readonly
+---
+
+(field_definition
+  name: (identifier)
+  (named_type
+    (identifier))
+  (integer_literal)
+  access: (access_modifier))
+
+==================
+Field with writeonly access
+==================
+field WO: b1 bit[0] writeonly
+---
+
+(field_definition
+  name: (identifier)
+  (named_type
+    (identifier))
+  (integer_literal)
+  access: (access_modifier))
+
+==================
 Fields inside register inside peripheral
 ==================
 peripheral GPIOA at 0x40020000 {

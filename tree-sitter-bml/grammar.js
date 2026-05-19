@@ -217,7 +217,10 @@ module.exports = grammar({
       $.integer_literal,
       optional(seq('..', $.integer_literal)),
       ']',
+      optional(field('access', $.access_modifier)),
     ),
+
+    access_modifier: $ => choice('readonly', 'writeonly'),
 
     // ─── Import / Export ──────────────────────────────────────────
 

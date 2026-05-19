@@ -1,5 +1,10 @@
 [
   {
+    "type": "access_modifier",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "addr_of_mut_expression",
     "named": true,
     "fields": {
@@ -3387,6 +3392,16 @@
     "type": "field_definition",
     "named": true,
     "fields": {
+      "access": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "access_modifier",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": true,
@@ -6929,6 +6944,10 @@
     "named": false
   },
   {
+    "type": "readonly",
+    "named": false
+  },
+  {
     "type": "reg",
     "named": false
   },
@@ -6974,6 +6993,10 @@
   },
   {
     "type": "while",
+    "named": false
+  },
+  {
+    "type": "writeonly",
     "named": false
   },
   {
