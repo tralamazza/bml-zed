@@ -42,6 +42,16 @@
   "exclusive"
   "ceiling"
   "section"
+  "align"
+  "naked"
+  "tailchain"
+  "upto"
+  "downto"
+  "step"
+  "stride"
+  "assume"
+  "assert"
+  "comptime_assert"
 ] @keyword
 
 ; ─── Storage modifier keywords ────────────────────────────────────
@@ -57,6 +67,9 @@
   "struct"
   "enum"
   "peripheral"
+  "view"
+  "ring"
+  "bits"
 ] @keyword.type
 
 ; ─── Conditional keywords ─────────────────────────────────────────
@@ -190,7 +203,7 @@
 
 ; ─── Modules / imports ────────────────────────────────────────────
 (import_statement
-  module: (identifier) @module)
+  module: (module_path (identifier) @module))
 
 (import_statement
   alias: (identifier) @module)
@@ -225,6 +238,16 @@
   "<<"
   ">>"
   "="
+  "+="
+  "-="
+  "*="
+  "/="
+  "%="
+  "&="
+  "|="
+  "^="
+  "<<="
+  ">>="
   "!"
   "->"
   ".."

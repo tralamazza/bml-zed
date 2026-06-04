@@ -29,7 +29,7 @@
 
 ; Import statements
 (import_statement
-  module: (identifier) @name) @item
+  module: (module_path) @name) @item
 
 ; Register definitions (inside peripherals)
 (register_definition

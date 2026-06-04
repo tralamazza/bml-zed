@@ -61,6 +61,7 @@ module.exports = grammar({
       $.field_definition,
       $.import_statement,
       $.export_statement,
+      $.comptime_assert,
     ),
 
     // ─── Function definitions ─────────────────────────────────────
@@ -70,7 +71,7 @@ module.exports = grammar({
       field('name', $.identifier),
       field('parameters', $.parameter_list),
       optional(field('return_type', $.return_type)),
-      optional($.function_annotation),
+      repeat($.function_annotation),
       field('body', $.block),
     ),
 
@@ -80,7 +81,7 @@ module.exports = grammar({
       field('name', $.identifier),
       field('parameters', $.parameter_list),
       optional(field('return_type', $.return_type)),
-      optional($.function_annotation),
+      repeat($.function_annotation),
       ';',
     ),
 
@@ -101,6 +102,8 @@ module.exports = grammar({
     function_annotation: $ => choice(
       $.context_annotation,
       $.isr_annotation,
+      $.naked_annotation,
+      $.section_annotation,
     ),
 
     context_annotation: $ => seq(
@@ -116,11 +119,19 @@ module.exports = grammar({
       'isr',
       '(',
       optional(seq($.string_literal, ',')),
-      'priority',
-      '=',
-      $.integer_literal,
+      $.isr_param,
+      repeat(seq(',', $.isr_param)),
       ')',
     ),
+
+    isr_param: $ => choice(
+      seq('priority', '=', $.integer_literal),
+      seq('tailchain', '=', $.boolean_literal),
+    ),
+
+    naked_annotation: $ => seq('@', 'naked'),
+
+    section_annotation: $ => seq('@', 'section', '(', $.string_literal, ')'),
 
     // ─── Variable / constant / static definitions ────────────────
 
@@ -150,7 +161,18 @@ module.exports = grammar({
       'dma',
       'external',
       seq('section', '(', $.string_literal, ')'),
+      seq('align', '(', $.integer_literal, ')'),
     )),
+
+    // ─── comptime_assert ──────────────────────────────────────────
+
+    comptime_assert: $ => seq(
+      'comptime_assert',
+      '(',
+      field('condition', $._expression),
+      ')',
+      ';',
+    ),
 
     // ─── Struct definition ────────────────────────────────────────
 
@@ -226,11 +248,13 @@ module.exports = grammar({
 
     import_statement: $ => seq(
       'import',
-      field('module', $.identifier),
+      field('module', $.module_path),
       optional($.import_items),
       optional(seq('as', field('alias', $.identifier))),
       ';',
     ),
+
+    module_path: $ => seq($.identifier, repeat(seq('.', $.identifier))),
 
     import_items: $ => seq('{', commaSep($.identifier), '}'),
 
@@ -263,6 +287,8 @@ module.exports = grammar({
       $.continue_statement,
       $.match_statement,
       $.asm_statement,
+      $.assume_statement,
+      $.assert_statement,
       $.block,
     ),
 
@@ -277,12 +303,20 @@ module.exports = grammar({
 
     assignment_statement: $ => seq(
       field('left', $._lvalue),
-      '=',
+      field('operator', $._assignment_operator),
       field('right', $._expression),
       ';',
     ),
 
+    _assignment_operator: $ => choice(
+      '=', '+=', '-=', '*=', '/=', '%=',
+      '&=', '|=', '^=', '<<=', '>>=',
+    ),
+
     expression_statement: $ => seq($._expression, ';'),
+
+    assume_statement: $ => seq('assume', '(', field('condition', $._expression), ')', ';'),
+    assert_statement: $ => seq('assert', '(', field('condition', $._expression), ')', ';'),
 
     _lvalue: $ => choice(
       $.identifier,
@@ -309,10 +343,13 @@ module.exports = grammar({
     for_statement: $ => seq(
       'for',
       field('variable', $.identifier),
+      ':',
+      field('type', $._type),
       'in',
       field('start', $._expression),
-      '..',
+      field('direction', choice('upto', 'downto')),
       field('end', $._expression),
+      optional(seq('step', field('step', $._expression))),
       field('body', $.block),
     ),
 
@@ -335,12 +372,45 @@ module.exports = grammar({
 
     match_pattern: $ => choice(
       seq(field('type', $.identifier), '@', field('variant', $.identifier)),
+      seq(field('start', $._pattern_integer), '..', field('end', $._pattern_integer)),
+      field('value', $._pattern_integer),
       '_',
     ),
 
-    asm_statement: $ => seq('asm', $.asm_body),
+    _pattern_integer: $ => seq(optional('-'), $.integer_literal),
+
+    asm_statement: $ => seq(
+      'asm',
+      $.asm_body,
+      optional($.asm_sections),
+      optional(';'),
+    ),
 
     asm_body: $ => seq('{', /[^}]*/, '}'),
+
+    asm_sections: $ => prec.right(seq(
+      ':',
+      optional($.asm_operands),
+      optional(seq(
+        ':',
+        optional($.asm_operands),
+        optional(seq(
+          ':',
+          optional($.asm_clobbers),
+        )),
+      )),
+    )),
+
+    asm_operands: $ => seq($.asm_operand, repeat(seq(',', $.asm_operand))),
+
+    asm_operand: $ => seq(
+      field('constraint', $.string_literal),
+      '(',
+      field('value', $._expression),
+      ')',
+    ),
+
+    asm_clobbers: $ => seq($.string_literal, repeat(seq(',', $.string_literal))),
 
     // ─── Expressions (Pratt parser style) ────────────────────────
 
@@ -485,6 +555,9 @@ module.exports = grammar({
       $.block_expression,
       $.if_expression,
       $.match_expression,
+      $.view_expression,
+      $.ring_expression,
+      $.bits_expression,
     ),
 
     array_expression: $ => seq(
@@ -526,6 +599,35 @@ module.exports = grammar({
       '}',
     ),
 
+    // view(arr) | view(arr, stride K) | view(ptr, len)
+    view_expression: $ => seq(
+      'view',
+      '(',
+      field('backing', $._expression),
+      optional(seq(',', choice(
+        seq('stride', field('stride', $._expression)),
+        field('length', $._expression),
+      ))),
+      ')',
+    ),
+
+    // ring(arr, head, len) | ring(ptr, capacity, head, len)
+    ring_expression: $ => seq(
+      'ring',
+      '(',
+      commaSep1($._expression),
+      ')',
+    ),
+
+    // bits(arr) | bits(ptr, bit_offset, len_bits)
+    bits_expression: $ => seq(
+      'bits',
+      '(',
+      field('backing', $._expression),
+      optional(seq(',', $._expression, ',', $._expression)),
+      ')',
+    ),
+
     // ─── Types ────────────────────────────────────────────────────
 
     _type: $ => choice(
@@ -534,6 +636,9 @@ module.exports = grammar({
       $.mutable_pointer_type,
       $.array_type,
       $.function_pointer_type,
+      $.view_type,
+      $.ring_type,
+      $.bits_type,
     ),
 
     named_type: $ => $.identifier,
@@ -548,6 +653,24 @@ module.exports = grammar({
       ';',
       field('length', $._expression),
       ']',
+    ),
+
+    view_type: $ => prec.right(seq(
+      'view',
+      optional('mut'),
+      field('element_type', $._type),
+      optional(seq('stride', field('stride', $._expression))),
+    )),
+
+    ring_type: $ => prec.right(seq(
+      'ring',
+      optional('mut'),
+      field('element_type', $._type),
+    )),
+
+    bits_type: $ => seq(
+      'bits',
+      optional('mut'),
     ),
 
     function_pointer_type: $ => seq(
@@ -571,7 +694,8 @@ module.exports = grammar({
       return token(new RegExp(`0[xX][0-9a-fA-F_]+${suffix}?|[0-9][0-9_]*${suffix}?`));
     },
 
-    float_literal: $ => /[0-9][0-9_]*\.[0-9][0-9_]*([eE][+-]?[0-9][0-9_]*)?[hfdHFD]?/,
+    // digits with a fractional part and/or an exponent, then optional h/f/d suffix.
+    float_literal: $ => /[0-9][0-9_]*(\.[0-9][0-9_]*([eE][+-]?[0-9][0-9_]*)?|[eE][+-]?[0-9][0-9_]*)[hfd]?/,
 
     boolean_literal: $ => choice('true', 'false'),
 
