@@ -7,8 +7,9 @@ authors = ["BML Contributors"]
 repository = "https://github.com/tralamazza/bml-zed"
 
 [grammars.bml]
-repository = "file:///home/tralamazza/github/tralamazza/compiler_ideas/bml-zed/tree-sitter-bml"
-rev = "master"
+repository = "https://github.com/tralamazza/bml-zed"
+path = "tree-sitter-bml"
+rev = "8ecf0c18fb66a334d01602f48462a781b89c01c1"
 
 [language_servers.bml-lsp]
 name = "bml-lsp"
