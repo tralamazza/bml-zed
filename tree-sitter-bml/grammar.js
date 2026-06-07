@@ -133,10 +133,13 @@ module.exports = grammar({
 
     section_annotation: $ => seq('@', 'section', '(', $.string_literal, ')'),
 
-    // ─── Variable / constant / static definitions ────────────────
+    // ─── Module variable / constant definitions ──────────────────
 
+    // A module-level `var` is access-controlled storage (takes @dma/@align/
+    // @shared/@exclusive/@section). The node is named `static_definition` for
+    // its storage class; the surface keyword is `var`.
     static_definition: $ => seq(
-      'static',
+      'var',
       field('name', $.identifier),
       ':',
       field('type', $._type),
@@ -260,7 +263,7 @@ module.exports = grammar({
 
     export_statement: $ => seq(
       'export',
-      choice('fn', 'static', 'const', 'peripheral', 'struct', 'enum'),
+      choice('fn', 'var', 'const', 'peripheral', 'struct', 'enum'),
       commaSep1($.identifier),
       ';',
     ),
@@ -293,7 +296,7 @@ module.exports = grammar({
     ),
 
     variable_declaration: $ => seq(
-      choice('var', 'val'),
+      choice('var', 'const'),
       field('name', $.identifier),
       optional(seq(':', field('type', $._type))),
       '=',

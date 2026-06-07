@@ -3,8 +3,6 @@
   "fn"
   "extern"
   "var"
-  "val"
-  "static"
   "const"
   "peripheral"
   "reg"
@@ -57,8 +55,6 @@
 ; ─── Storage modifier keywords ────────────────────────────────────
 [
   "var"
-  "val"
-  "static"
   "const"
 ] @keyword.storage
 

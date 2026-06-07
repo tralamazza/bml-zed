@@ -461,7 +461,7 @@
       "members": [
         {
           "type": "STRING",
-          "value": "static"
+          "value": "var"
         },
         {
           "type": "FIELD",
@@ -1248,7 +1248,7 @@
             },
             {
               "type": "STRING",
-              "value": "static"
+              "value": "var"
             },
             {
               "type": "STRING",
@@ -1420,7 +1420,7 @@
             },
             {
               "type": "STRING",
-              "value": "val"
+              "value": "const"
             }
           ]
         },

@@ -9635,10 +9635,6 @@
     "named": false
   },
   {
-    "type": "static",
-    "named": false
-  },
-  {
     "type": "step",
     "named": false
   },
@@ -9664,10 +9660,6 @@
   },
   {
     "type": "upto",
-    "named": false
-  },
-  {
-    "type": "val",
     "named": false
   },
   {
