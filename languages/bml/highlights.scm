@@ -47,6 +47,14 @@
   "downto"
   "step"
   "stride"
+  "owns"
+  "claim"
+  "reclaim"
+  "repr"
+  "be"
+  "le"
+  "extent"
+  "addr"
   "assume"
   "assert"
   "comptime_assert"
@@ -105,6 +113,13 @@
   "exclusive"
   "ceiling"
   "section"
+  "align"
+  "naked"
+  "tailchain"
+  "repr"
+  "be"
+  "le"
+  "extent"
 ] @attribute
 
 ; ─── Types ────────────────────────────────────────────────────────
@@ -139,6 +154,11 @@
 
 (call_expression
   function: (identifier) @function.call)
+
+; Builtin functions
+((call_expression
+  function: (identifier) @function.builtin)
+  (#eq? @function.builtin "len"))
 
 (call_expression
   function: (field_expression
@@ -197,6 +217,12 @@
 (field_definition
   name: (identifier) @variable.member)
 
+(owns_path
+  peripheral: (identifier) @type)
+
+(owns_path
+  register: (identifier) @property)
+
 ; ─── Modules / imports ────────────────────────────────────────────
 (import_statement
   module: (module_path (identifier) @module))
@@ -207,6 +233,7 @@
 ; ─── Literals ─────────────────────────────────────────────────────
 (integer_literal) @number
 (float_literal) @number.float
+(extent_multiplier) @number
 (boolean_literal) @boolean
 (null_literal) @constant.builtin
 (string_literal) @string
@@ -219,6 +246,9 @@
   "*"
   "/"
   "%"
+  "+%"
+  "-%"
+  "*%"
   "=="
   "!="
   "<"
@@ -239,6 +269,9 @@
   "*="
   "/="
   "%="
+  "+%="
+  "-%="
+  "*%="
   "&="
   "|="
   "^="

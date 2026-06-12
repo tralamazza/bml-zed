@@ -1,0 +1,328 @@
+==================
+Wrapping arithmetic operators
+==================
+fn tick() {
+    var seq: u32 = 0;
+    seq = seq +% 1;
+    var d: u32 = a -% b;
+    var p: u32 = x *% y;
+}
+---
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (variable_declaration
+        (identifier)
+        (named_type
+          (identifier))
+        (integer_literal))
+      (assignment_statement
+        (identifier)
+        (binary_expression
+          (identifier)
+          (integer_literal)))
+      (variable_declaration
+        (identifier)
+        (named_type
+          (identifier))
+        (binary_expression
+          (identifier)
+          (identifier)))
+      (variable_declaration
+        (identifier)
+        (named_type
+          (identifier))
+        (binary_expression
+          (identifier)
+          (identifier))))))
+
+==================
+Wrapping compound assignment
+==================
+fn bump() {
+    counter +%= 1;
+    counter -%= 2;
+    counter *%= 3;
+}
+---
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (assignment_statement
+        (identifier)
+        (integer_literal))
+      (assignment_statement
+        (identifier)
+        (integer_literal))
+      (assignment_statement
+        (identifier)
+        (integer_literal)))))
+
+==================
+Claim block over a shared static
+==================
+var LOG: [u32; 4] @shared;
+
+fn drain() -> u32 @context(thread) {
+    var sum: u32 = 0;
+    claim LOG {
+        const v = view(LOG);
+        for i: u32 in 0 upto 4 { sum = sum + v[i]; }
+    }
+    return sum;
+}
+---
+
+(source_file
+  (static_definition
+    (identifier)
+    (array_type
+      (named_type
+        (identifier))
+      (integer_literal)))
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (return_type
+      (named_type
+        (identifier)))
+    (function_annotation
+      (context_annotation))
+    (block
+      (variable_declaration
+        (identifier)
+        (named_type
+          (identifier))
+        (integer_literal))
+      (claim_statement
+        (identifier)
+        (block
+          (variable_declaration
+            (identifier)
+            (view_expression
+              (identifier)))
+          (for_statement
+            (identifier)
+            (named_type
+              (identifier))
+            (integer_literal)
+            (integer_literal)
+            (block
+              (assignment_statement
+                (identifier)
+                (index_expression
+                  (binary_expression
+                    (identifier)
+                    (identifier))
+                  (identifier)))))))
+      (return_statement
+        (identifier)))))
+
+==================
+Reclaim expression
+==================
+fn consume() {
+    if ETH.DMASR.RS {
+        const v = reclaim(RXBUF);
+        var first: u32 = v[0];
+    }
+}
+---
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list)
+    (block
+      (if_statement
+        (field_expression
+          (field_expression
+            (identifier)
+            (identifier))
+          (identifier))
+        (block
+          (variable_declaration
+            (identifier)
+            (reclaim_expression
+              (identifier)))
+          (variable_declaration
+            (identifier)
+            (named_type
+              (identifier))
+            (index_expression
+              (identifier)
+              (integer_literal))))))))
+
+==================
+Owns statement
+==================
+owns GPIOA, RCC.AHB1ENR;
+owns UART1;
+---
+
+(source_file
+  (owns_statement
+    (owns_path
+      (identifier))
+    (owns_path
+      (identifier)
+      (identifier)))
+  (owns_statement
+    (owns_path
+      (identifier))))
+
+==================
+Bare @shared and pinned ceiling
+==================
+var COUNT: u32 @shared;
+var FLAGS: u32 @shared(ceiling = 2) = 0;
+---
+
+(source_file
+  (static_definition
+    (identifier)
+    (named_type
+      (identifier)))
+  (static_definition
+    (identifier)
+    (named_type
+      (identifier))
+    (integer_literal)
+    (integer_literal)))
+
+==================
+Module var with region placement
+==================
+var RXBUF: [u8; 64] @dma @align(4) in eth_ram;
+---
+
+(source_file
+  (static_definition
+    (identifier)
+    (array_type
+      (named_type
+        (identifier))
+      (integer_literal))
+    (integer_literal)
+    (identifier)))
+
+==================
+Struct with @repr(C)
+==================
+struct Config @repr(C) {
+    flags: u8,
+    baud: u32,
+}
+---
+
+(source_file
+  (struct_definition
+    (identifier)
+    (repr_annotation)
+    (struct_field
+      (identifier)
+      (named_type
+        (identifier)))
+    (struct_field
+      (identifier)
+      (named_type
+        (identifier)))))
+
+==================
+Struct with @repr(packed) and endian fields
+==================
+struct Frame @repr(packed) {
+    ethertype: u16 @be,
+    seq: u32 @be,
+    flags: u32,
+}
+---
+
+(source_file
+  (struct_definition
+    (identifier)
+    (repr_annotation)
+    (struct_field
+      (identifier)
+      (named_type
+        (identifier))
+      (field_attribute))
+    (struct_field
+      (identifier)
+      (named_type
+        (identifier))
+      (field_attribute))
+    (struct_field
+      (identifier)
+      (named_type
+        (identifier)))))
+
+==================
+Struct with @extent and addr-in fields
+==================
+struct RxDesc {
+    control: u32 @extent(buf1),
+    count: u32 @extent(buf2, x4),
+    buf1: addr in eth_ram,
+    buf2: addr in eth_ram,
+}
+---
+
+(source_file
+  (struct_definition
+    (identifier)
+    (struct_field
+      (identifier)
+      (named_type
+        (identifier))
+      (field_attribute
+        (identifier)))
+    (struct_field
+      (identifier)
+      (named_type
+        (identifier))
+      (field_attribute
+        (identifier)
+        (extent_multiplier)))
+    (struct_field
+      (identifier)
+      (addr_type
+        (identifier)))
+    (struct_field
+      (identifier)
+      (addr_type
+        (identifier)))))
+
+==================
+Explicit padding fields
+==================
+struct Header {
+    tag: u8,
+    _: [u8; 3],
+    len: u32,
+}
+---
+
+(source_file
+  (struct_definition
+    (identifier)
+    (struct_field
+      (identifier)
+      (named_type
+        (identifier)))
+    (struct_field
+      (identifier)
+      (array_type
+        (named_type
+          (identifier))
+        (integer_literal)))
+    (struct_field
+      (identifier)
+      (named_type
+        (identifier)))))

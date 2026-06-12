@@ -16,7 +16,6 @@ const PREC = {
   EQUALITY: 17,
   LOGICAL_AND: 18,
   LOGICAL_OR: 19,
-  ASSIGNMENT: 20,
 };
 
 module.exports = grammar({
@@ -61,6 +60,7 @@ module.exports = grammar({
       $.field_definition,
       $.import_statement,
       $.export_statement,
+      $.owns_statement,
       $.comptime_assert,
     ),
 
@@ -126,7 +126,7 @@ module.exports = grammar({
 
     isr_param: $ => choice(
       seq('priority', '=', $.integer_literal),
-      seq('tailchain', '=', $.boolean_literal),
+      seq('tailchain', '=', choice($.boolean_literal, $.integer_literal)),
     ),
 
     naked_annotation: $ => seq('@', 'naked'),
@@ -144,6 +144,7 @@ module.exports = grammar({
       ':',
       field('type', $._type),
       repeat($._storage_annotation),
+      optional(seq('in', field('region', $.identifier))),
       optional(seq('=', field('value', $._expression))),
       ';',
     ),
@@ -160,12 +161,27 @@ module.exports = grammar({
 
     _storage_annotation: $ => seq('@', choice(
       seq('exclusive', '(', $.identifier, ')'),
-      seq('shared', '(', 'ceiling', '=', $.integer_literal, ')'),
+      // Bare `@shared` derives the ceiling from accessor contexts;
+      // `@shared(ceiling = N)` pins it.
+      seq('shared', optional(seq('(', 'ceiling', '=', $.integer_literal, ')'))),
       'dma',
       'external',
       seq('section', '(', $.string_literal, ')'),
       seq('align', '(', $.integer_literal, ')'),
     )),
+
+    // `owns P, P.R;` -- a module's exclusive register-ownership claims.
+    owns_statement: $ => seq(
+      'owns',
+      $.owns_path,
+      repeat(seq(',', $.owns_path)),
+      ';',
+    ),
+
+    owns_path: $ => seq(
+      field('peripheral', $.identifier),
+      optional(seq('.', field('register', $.identifier))),
+    ),
 
     // ─── comptime_assert ──────────────────────────────────────────
 
@@ -182,16 +198,30 @@ module.exports = grammar({
     struct_definition: $ => seq(
       'struct',
       field('name', $.identifier),
+      optional($.repr_annotation),
       '{',
       commaSep($.struct_field),
       '}',
     ),
 
+    repr_annotation: $ => seq('@', 'repr', '(', choice('C', 'packed'), ')'),
+
     struct_field: $ => seq(
       field('name', $.identifier),
       ':',
       field('type', $._type),
+      repeat($.field_attribute),
     ),
+
+    // `@be`/`@le` (byte order) and `@extent(addr_field [, xN])` (transfer
+    // extent armed by this field, scaled N bytes per count unit).
+    field_attribute: $ => seq('@', choice(
+      'be',
+      'le',
+      seq('extent', '(', $.identifier, optional(seq(',', $.extent_multiplier)), ')'),
+    )),
+
+    extent_multiplier: $ => token(/x[0-9]+/),
 
     // ─── Enum definition ──────────────────────────────────────────
 
@@ -289,10 +319,18 @@ module.exports = grammar({
       $.break_statement,
       $.continue_statement,
       $.match_statement,
+      $.claim_statement,
       $.asm_statement,
       $.assume_statement,
       $.assert_statement,
       $.block,
+    ),
+
+    // `claim X { ... }` -- a masked ownership window over a @shared static.
+    claim_statement: $ => seq(
+      'claim',
+      field('target', $.identifier),
+      field('body', $.block),
     ),
 
     variable_declaration: $ => seq(
@@ -313,6 +351,7 @@ module.exports = grammar({
 
     _assignment_operator: $ => choice(
       '=', '+=', '-=', '*=', '/=', '%=',
+      '+%=', '-%=', '*%=',
       '&=', '|=', '^=', '<<=', '>>=',
     ),
 
@@ -417,18 +456,8 @@ module.exports = grammar({
 
     // ─── Expressions (Pratt parser style) ────────────────────────
 
+    // Assignment is statement-only in BML; there is no assignment expression.
     _expression: $ => choice(
-      $.assignment_expression,
-      $._expr_without_assign,
-    ),
-
-    assignment_expression: $ => prec(PREC.ASSIGNMENT, seq(
-      field('left', $._lvalue),
-      '=',
-      field('right', $._expression),
-    )),
-
-    _expr_without_assign: $ => choice(
       $.cast_expression,
       $.enum_variant_expression,
       $.sizeof_expression,
@@ -469,8 +498,11 @@ module.exports = grammar({
         [PREC.MULTIPLICATIVE, '*'],
         [PREC.MULTIPLICATIVE, '/'],
         [PREC.MULTIPLICATIVE, '%'],
+        [PREC.MULTIPLICATIVE, '*%'],
         [PREC.ADDITIVE, '+'],
         [PREC.ADDITIVE, '-'],
+        [PREC.ADDITIVE, '+%'],
+        [PREC.ADDITIVE, '-%'],
         [PREC.SHIFT, '<<'],
         [PREC.SHIFT, '>>'],
         [PREC.BITWISE, '&'],
@@ -559,6 +591,7 @@ module.exports = grammar({
       $.if_expression,
       $.match_expression,
       $.view_expression,
+      $.reclaim_expression,
       $.ring_expression,
       $.bits_expression,
     ),
@@ -614,6 +647,15 @@ module.exports = grammar({
       ')',
     ),
 
+    // reclaim(arr): the handshake-acknowledged view over agent-shared
+    // memory. Contiguous form only -- no len/stride.
+    reclaim_expression: $ => seq(
+      'reclaim',
+      '(',
+      field('backing', $._expression),
+      ')',
+    ),
+
     // ring(arr, head, len) | ring(ptr, capacity, head, len)
     ring_expression: $ => seq(
       'ring',
@@ -642,7 +684,11 @@ module.exports = grammar({
       $.view_type,
       $.ring_type,
       $.bits_type,
+      $.addr_type,
     ),
+
+    // `addr in <region>`: an in-memory handoff slot (descriptor field).
+    addr_type: $ => seq('addr', 'in', field('region', $.identifier)),
 
     named_type: $ => $.identifier,
 

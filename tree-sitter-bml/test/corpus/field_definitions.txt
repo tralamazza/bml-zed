@@ -4,11 +4,12 @@ Single-bit field (b1)
 field ODR0: b1 bit[0]
 ---
 
-(field_definition
-  name: (identifier)
-  (named_type
-    (identifier))
-  (integer_literal))
+(source_file
+  (field_definition
+    name: (identifier)
+    (named_type
+      (identifier))
+    (integer_literal)))
 
 ==================
 Multi-bit field (u32, range)
@@ -16,12 +17,13 @@ Multi-bit field (u32, range)
 field MODER0: u32 bit[0..1]
 ---
 
-(field_definition
-  name: (identifier)
-  (named_type
-    (identifier))
-  (integer_literal)
-  (integer_literal))
+(source_file
+  (field_definition
+    name: (identifier)
+    (named_type
+      (identifier))
+    (integer_literal)
+    (integer_literal)))
 
 ==================
 Field with readonly access
@@ -29,12 +31,13 @@ Field with readonly access
 field BSY: b1 bit[0] readonly
 ---
 
-(field_definition
-  name: (identifier)
-  (named_type
-    (identifier))
-  (integer_literal)
-  access: (access_modifier))
+(source_file
+  (field_definition
+    name: (identifier)
+    (named_type
+      (identifier))
+    (integer_literal)
+    access: (access_modifier)))
 
 ==================
 Field with writeonly access
@@ -42,12 +45,13 @@ Field with writeonly access
 field WO: b1 bit[0] writeonly
 ---
 
-(field_definition
-  name: (identifier)
-  (named_type
-    (identifier))
-  (integer_literal)
-  access: (access_modifier))
+(source_file
+  (field_definition
+    name: (identifier)
+    (named_type
+      (identifier))
+    (integer_literal)
+    access: (access_modifier)))
 
 ==================
 Fields inside register inside peripheral
