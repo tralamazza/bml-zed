@@ -326,3 +326,110 @@ struct Header {
       (identifier)
       (named_type
         (identifier)))))
+
+==================
+Imports (plain and aliased dotted path)
+==================
+import rgb;
+import sub.mod as gfx;
+---
+
+(source_file
+  (import_statement
+    (module_path
+      (identifier)))
+  (import_statement
+    (module_path
+      (identifier)
+      (identifier))
+    (identifier)))
+
+==================
+Export modifier on fn, extern fn, var, const
+==================
+export fn pack(c: u32) -> u32 { return c; }
+export extern fn strlen(s: *u8) -> u32;
+export var counter: u32 = 0;
+export const MAX: u32 = 10;
+---
+
+(source_file
+  (function_definition
+    (identifier)
+    (parameter_list
+      (parameter
+        (identifier)
+        (named_type
+          (identifier))))
+    (return_type
+      (named_type
+        (identifier)))
+    (block
+      (return_statement
+        (identifier))))
+  (extern_function_declaration
+    (identifier)
+    (parameter_list
+      (parameter
+        (identifier)
+        (pointer_type
+          (named_type
+            (identifier)))))
+    (return_type
+      (named_type
+        (identifier))))
+  (static_definition
+    (identifier)
+    (named_type
+      (identifier))
+    (integer_literal))
+  (const_definition
+    (identifier)
+    (named_type
+      (identifier))
+    (integer_literal)))
+
+==================
+Export modifier on struct, enum, peripheral
+==================
+export struct Color { r: u8, g: u8, b: u8 }
+export enum State: u8 { Idle = 0, Running = 1 }
+export peripheral RCC at 0x40021000 { reg CR offset 0x00 { field ON: u1 bit[0] } }
+---
+
+(source_file
+  (struct_definition
+    (identifier)
+    (struct_field
+      (identifier)
+      (named_type
+        (identifier)))
+    (struct_field
+      (identifier)
+      (named_type
+        (identifier)))
+    (struct_field
+      (identifier)
+      (named_type
+        (identifier))))
+  (enum_definition
+    (identifier)
+    (named_type
+      (identifier))
+    (enum_variant_def
+      (identifier)
+      (integer_literal))
+    (enum_variant_def
+      (identifier)
+      (integer_literal)))
+  (peripheral_definition
+    (identifier)
+    (integer_literal)
+    (register_definition
+      (identifier)
+      (integer_literal)
+      (field_definition
+        (identifier)
+        (named_type
+          (identifier))
+        (integer_literal)))))

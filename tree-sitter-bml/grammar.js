@@ -59,7 +59,6 @@ module.exports = grammar({
       $.register_definition,
       $.field_definition,
       $.import_statement,
-      $.export_statement,
       $.owns_statement,
       $.comptime_assert,
     ),
@@ -67,6 +66,7 @@ module.exports = grammar({
     // ─── Function definitions ─────────────────────────────────────
 
     function_definition: $ => seq(
+      optional('export'),
       'fn',
       field('name', $.identifier),
       field('parameters', $.parameter_list),
@@ -76,6 +76,7 @@ module.exports = grammar({
     ),
 
     extern_function_declaration: $ => seq(
+      optional('export'),
       'extern',
       'fn',
       field('name', $.identifier),
@@ -139,6 +140,7 @@ module.exports = grammar({
     // @shared/@exclusive/@section). The node is named `static_definition` for
     // its storage class; the surface keyword is `var`.
     static_definition: $ => seq(
+      optional('export'),
       'var',
       field('name', $.identifier),
       ':',
@@ -150,6 +152,7 @@ module.exports = grammar({
     ),
 
     const_definition: $ => seq(
+      optional('export'),
       'const',
       field('name', $.identifier),
       ':',
@@ -196,6 +199,7 @@ module.exports = grammar({
     // ─── Struct definition ────────────────────────────────────────
 
     struct_definition: $ => seq(
+      optional('export'),
       'struct',
       field('name', $.identifier),
       optional($.repr_annotation),
@@ -226,6 +230,7 @@ module.exports = grammar({
     // ─── Enum definition ──────────────────────────────────────────
 
     enum_definition: $ => seq(
+      optional('export'),
       'enum',
       field('name', $.identifier),
       ':',
@@ -243,6 +248,7 @@ module.exports = grammar({
     // ─── Peripheral definition ────────────────────────────────────
 
     peripheral_definition: $ => seq(
+      optional('export'),
       'peripheral',
       field('name', $.identifier),
       'at',
@@ -277,26 +283,19 @@ module.exports = grammar({
 
     access_modifier: $ => choice('readonly', 'writeonly'),
 
-    // ─── Import / Export ──────────────────────────────────────────
+    // ─── Imports ──────────────────────────────────────────────────
+    // `export` is a declaration-site modifier on items (see each *_definition
+    // rule above), not a statement. There is no selective-import form
+    // (`import m { a, b };` is rejected by the compiler as E109).
 
     import_statement: $ => seq(
       'import',
       field('module', $.module_path),
-      optional($.import_items),
       optional(seq('as', field('alias', $.identifier))),
       ';',
     ),
 
     module_path: $ => seq($.identifier, repeat(seq('.', $.identifier))),
-
-    import_items: $ => seq('{', commaSep($.identifier), '}'),
-
-    export_statement: $ => seq(
-      'export',
-      choice('fn', 'var', 'const', 'peripheral', 'struct', 'enum'),
-      commaSep1($.identifier),
-      ';',
-    ),
 
     // ─── Statements ───────────────────────────────────────────────
 

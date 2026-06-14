@@ -3865,21 +3865,6 @@
     }
   },
   {
-    "type": "export_statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "identifier",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "expression_statement",
     "named": true,
     "fields": {},
@@ -5274,21 +5259,6 @@
     }
   },
   {
-    "type": "import_items",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": false,
-      "types": [
-        {
-          "type": "identifier",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "import_statement",
     "named": true,
     "fields": {
@@ -5312,16 +5282,6 @@
           }
         ]
       }
-    },
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "import_items",
-          "named": true
-        }
-      ]
     }
   },
   {
@@ -7366,10 +7326,6 @@
         },
         {
           "type": "enum_definition",
-          "named": true
-        },
-        {
-          "type": "export_statement",
           "named": true
         },
         {
