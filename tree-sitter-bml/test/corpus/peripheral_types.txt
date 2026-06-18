@@ -1,0 +1,183 @@
+==================
+peripheral_type template with instances
+==================
+peripheral_type GpioPort {
+    reg MODER offset 0x00 { field MODE0: u32 bit[0..1] }
+    reg ODR offset 0x14 { field ODR0: b1 bit[0] }
+}
+
+peripheral GPIOA: GpioPort at 0x40020000;
+peripheral GPIOB: GpioPort at 0x40020400;
+---
+
+(source_file
+  (peripheral_type_definition
+    name: (identifier)
+    (register_definition
+      name: (identifier)
+      (integer_literal)
+      (field_definition
+        name: (identifier)
+        (named_type
+          (identifier))
+        (integer_literal)
+        (integer_literal)))
+    (register_definition
+      name: (identifier)
+      (integer_literal)
+      (field_definition
+        name: (identifier)
+        (named_type
+          (identifier))
+        (integer_literal))))
+  (peripheral_instance
+    name: (identifier)
+    type: (named_type
+      (identifier))
+    (integer_literal))
+  (peripheral_instance
+    name: (identifier)
+    type: (named_type
+      (identifier))
+    (integer_literal)))
+
+==================
+peripheral_type with an empty register body
+==================
+peripheral_type Usart {
+    reg CR1 offset 0x00 { field UE: b1 bit[0] }
+    reg BRR offset 0x08 {}
+}
+---
+
+(source_file
+  (peripheral_type_definition
+    name: (identifier)
+    (register_definition
+      name: (identifier)
+      (integer_literal)
+      (field_definition
+        name: (identifier)
+        (named_type
+          (identifier))
+        (integer_literal)))
+    (register_definition
+      name: (identifier)
+      (integer_literal))))
+
+==================
+Inline named field enum (no explicit type)
+==================
+field SIZE bit[0..1] enum SizeSel { Byte = 0, Half = 1, Word = 2 }
+---
+
+(source_file
+  (field_definition
+    name: (identifier)
+    (integer_literal)
+    (integer_literal)
+    (inline_field_enum
+      name: (identifier)
+      (enum_variant_def
+        name: (identifier)
+        (integer_literal))
+      (enum_variant_def
+        name: (identifier)
+        (integer_literal))
+      (enum_variant_def
+        name: (identifier)
+        (integer_literal)))))
+
+==================
+Inline field enum followed by access modifier
+==================
+field MODE bit[0..1] enum M { A = 0, B = 1 } readonly
+---
+
+(source_file
+  (field_definition
+    name: (identifier)
+    (integer_literal)
+    (integer_literal)
+    (inline_field_enum
+      name: (identifier)
+      (enum_variant_def
+        name: (identifier)
+        (integer_literal))
+      (enum_variant_def
+        name: (identifier)
+        (integer_literal)))
+    access: (access_modifier)))
+
+==================
+Exported peripheral instance
+==================
+peripheral_type Timer {
+    reg CR offset 0x00 { field EN: b1 bit[0] }
+}
+export peripheral TIM1: Timer at 0x40010000;
+---
+
+(source_file
+  (peripheral_type_definition
+    name: (identifier)
+    (register_definition
+      name: (identifier)
+      (integer_literal)
+      (field_definition
+        name: (identifier)
+        (named_type
+          (identifier))
+        (integer_literal))))
+  (peripheral_instance
+    name: (identifier)
+    type: (named_type
+      (identifier))
+    (integer_literal)))
+
+==================
+peripheral_type used as a driver parameter (slice 2)
+==================
+peripheral_type Usart {
+    reg CR1 offset 0x00 { field UE: b1 bit[0] }
+}
+peripheral USART1: Usart at 0x40011000;
+
+fn usart_init(u: Usart, brr: u32) {
+    u.CR1.UE = false;
+}
+---
+
+(source_file
+  (peripheral_type_definition
+    name: (identifier)
+    (register_definition
+      name: (identifier)
+      (integer_literal)
+      (field_definition
+        name: (identifier)
+        (named_type
+          (identifier))
+        (integer_literal))))
+  (peripheral_instance
+    name: (identifier)
+    type: (named_type
+      (identifier))
+    (integer_literal))
+  (function_definition
+    name: (identifier)
+    parameters: (parameter_list
+      (parameter
+        name: (identifier)
+        type: (named_type
+          (identifier)))
+      (parameter
+        name: (identifier)
+        type: (named_type
+          (identifier))))
+    body: (block
+      (assignment_statement
+        object: (identifier)
+        field: (identifier)
+        field: (identifier)
+        right: (boolean_literal)))))

@@ -5,6 +5,7 @@
   "var"
   "const"
   "peripheral"
+  "peripheral_type"
   "reg"
   "field"
   "at"
@@ -71,6 +72,7 @@
   "struct"
   "enum"
   "peripheral"
+  "peripheral_type"
   "view"
   "ring"
   "bits"
@@ -120,6 +122,7 @@
   "be"
   "le"
   "extent"
+  "mask"
 ] @attribute
 
 ; ─── Types ────────────────────────────────────────────────────────
@@ -133,10 +136,10 @@
     "void"
   ))
 
-; Struct / enum / peripheral name definitions
+; Struct / enum name definitions
+; (peripheral / peripheral_type / instance names are in the Peripherals section)
 (struct_definition name: (identifier) @type)
 (enum_definition name: (identifier) @type)
-(peripheral_definition name: (identifier) @type)
 
 ; Type annotations - named types used as type references
 (named_type) @type
@@ -211,11 +214,27 @@
 (peripheral_definition
   name: (identifier) @type)
 
+; `peripheral_type NAME { .. }` -- the register-layout template
+(peripheral_type_definition
+  name: (identifier) @type)
+
+; `peripheral NAME: TYPE at ADDR;` -- an instance of a peripheral_type
+; (the `type:` named_type is already covered by the (named_type) @type rule)
+(peripheral_instance
+  name: (identifier) @type)
+
 (register_definition
   name: (identifier) @property)
 
 (field_definition
   name: (identifier) @variable.member)
+
+; Field access modifier: `readonly` / `writeonly`
+(access_modifier) @keyword.modifier
+
+; Inline named field enum: `field F bit[..] enum NAME { .. }`
+(inline_field_enum
+  name: (identifier) @type)
 
 (owns_path
   peripheral: (identifier) @type)

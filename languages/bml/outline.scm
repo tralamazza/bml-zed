@@ -27,6 +27,13 @@
 (peripheral_definition
   name: (identifier) @name) @item
 
+; Peripheral-type templates and their instances
+(peripheral_type_definition
+  name: (identifier) @name) @item
+
+(peripheral_instance
+  name: (identifier) @name) @item
+
 ; Import statements
 (import_statement
   module: (module_path) @name) @item

@@ -12,8 +12,14 @@
 ; Indent peripheral body
 (peripheral_definition "}" @end) @indent
 
+; Indent peripheral_type body
+(peripheral_type_definition "}" @end) @indent
+
 ; Indent register body
 (register_definition "}" @end) @indent
+
+; Indent inline field enum body
+(inline_field_enum "}" @end) @indent
 
 ; Indent field definition body (not needed, handled by register)
 

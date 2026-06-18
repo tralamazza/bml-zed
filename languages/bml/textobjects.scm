@@ -20,6 +20,9 @@
 ; Peripheral definition as class
 (peripheral_definition) @class.around
 
+; Peripheral-type template as class
+(peripheral_type_definition) @class.around
+
 ; Comments
 (line_comment)+ @comment.around
 (block_comment) @comment.around

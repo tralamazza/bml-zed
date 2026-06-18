@@ -27,6 +27,13 @@ module.exports = grammar({
     /\s/,
   ],
 
+  // Tokens that need delimiter counting (impossible in a regex): nested block
+  // comments and the balanced-brace `asm` body. Implemented in src/scanner.c.
+  externals: $ => [
+    $.block_comment,
+    $.asm_body,
+  ],
+
   word: $ => $.identifier,
 
   conflicts: $ => [
@@ -39,6 +46,12 @@ module.exports = grammar({
     [$._lvalue, $._expression],
     [$._statement, $.block_expression],
     [$._primary_expression, $.struct_expression],
+    // `a.b` may begin a qualified struct-init (`a.b { .. }`), a field access, or
+    // an lvalue; GLR picks by what follows the qualified name.
+    [$._lvalue, $._primary_expression, $.struct_expression],
+    // `(*p)` may be a parenthesized lvalue or a group expression; GLR picks the
+    // lvalue when an `=` follows the `.field`, the expression otherwise.
+    [$._lvalue, $.group_expression],
     [$.match_statement, $.match_expression],
     [$.if_statement, $.if_expression],
   ],
@@ -56,6 +69,8 @@ module.exports = grammar({
       $.struct_definition,
       $.enum_definition,
       $.peripheral_definition,
+      $.peripheral_type_definition,
+      $.peripheral_instance,
       $.register_definition,
       $.field_definition,
       $.import_statement,
@@ -115,17 +130,21 @@ module.exports = grammar({
       ')',
     ),
 
+    // beemel's @isr arm parses an order-independent, possibly-empty list: the
+    // string label and the `priority`/`tailchain` params are each optional and
+    // may appear in any order (`@isr()`, `@isr("USART1")`, `@isr(priority=3,
+    // "USART1")` all parse). Duplicate/ordering rules are semantic (E108), so the
+    // grammar treats the label as just another comma-separated element.
     isr_annotation: $ => seq(
       '@',
       'isr',
       '(',
-      optional(seq($.string_literal, ',')),
-      $.isr_param,
-      repeat(seq(',', $.isr_param)),
+      commaSep($.isr_param),
       ')',
     ),
 
     isr_param: $ => choice(
+      $.string_literal,
       seq('priority', '=', $.integer_literal),
       seq('tailchain', '=', choice($.boolean_literal, $.integer_literal)),
     ),
@@ -217,12 +236,17 @@ module.exports = grammar({
       repeat($.field_attribute),
     ),
 
-    // `@be`/`@le` (byte order) and `@extent(addr_field [, xN])` (transfer
-    // extent armed by this field, scaled N bytes per count unit).
+    // `@be`/`@le` (byte order) and `@extent(addr_field [, xN] [, mask N])`:
+    // transfer extent armed by this field, optionally scaled N bytes per count
+    // unit (`xN`) and/or restricted to a sub-field bit mask (`mask N`), in that
+    // fixed order. `mask` is a contextual keyword (a plain identifier elsewhere).
     field_attribute: $ => seq('@', choice(
       'be',
       'le',
-      seq('extent', '(', $.identifier, optional(seq(',', $.extent_multiplier)), ')'),
+      seq('extent', '(', $.identifier,
+        optional(seq(',', $.extent_multiplier)),
+        optional(seq(',', 'mask', $.integer_literal)),
+        ')'),
     )),
 
     extent_multiplier: $ => token(/x[0-9]+/),
@@ -247,6 +271,8 @@ module.exports = grammar({
 
     // ─── Peripheral definition ────────────────────────────────────
 
+    // Anonymous form: `peripheral NAME at ADDR { reg ... }` (name + address +
+    // inline layout). Unchanged by the peripheral_type feature.
     peripheral_definition: $ => seq(
       optional('export'),
       'peripheral',
@@ -256,6 +282,33 @@ module.exports = grammar({
       '{',
       repeat($.register_definition),
       '}',
+    ),
+
+    // Register-layout template (no name binding, no address):
+    // `peripheral_type NAME { reg ... }`. Instantiated by a peripheral_instance.
+    // `export` is accepted here (beemel's parser consumes the token and recovers)
+    // but is a compile error E108 -- a peripheral_type is never exportable, unlike
+    // a peripheral_instance.
+    peripheral_type_definition: $ => seq(
+      optional('export'),
+      'peripheral_type',
+      field('name', $.identifier),
+      '{',
+      repeat($.register_definition),
+      '}',
+    ),
+
+    // Instance of a peripheral_type, binding a name + address to a template:
+    // `peripheral NAME: TYPE at ADDR;` (no body, trailing `;`).
+    peripheral_instance: $ => seq(
+      optional('export'),
+      'peripheral',
+      field('name', $.identifier),
+      ':',
+      field('type', $.named_type),
+      'at',
+      $.integer_literal,
+      ';',
     ),
 
     register_definition: $ => seq(
@@ -268,17 +321,36 @@ module.exports = grammar({
       '}',
     ),
 
-    field_definition: $ => seq(
+    // A field carries its type either explicitly (`: TYPE` before the bit spec --
+    // the full type grammar, mirroring beemel's parse_type_expr) or via an inline
+    // `enum NAME { .. }` after the bit spec -- exactly one of the two (the compiler
+    // rejects both/neither as E110/E111). An optional access modifier
+    // (`readonly`/`writeonly`) follows. `prec.right` makes the trailing optionals
+    // (inline enum / access) bind to this field instead of forcing an early reduce
+    // -- needed because field_definition is also a top-level `_item` (for LSP
+    // hover), which turns those trailing optionals into a shift/reduce ambiguity.
+    field_definition: $ => prec.right(seq(
       'field',
       field('name', $.identifier),
-      ':',
-      $.named_type,
+      optional(seq(':', $._type)),
       'bit',
       '[',
       $.integer_literal,
       optional(seq('..', $.integer_literal)),
       ']',
+      optional($.inline_field_enum),
       optional(field('access', $.access_modifier)),
+    )),
+
+    // Inline named field enum -- sugar for a top-level `export enum NAME` plus a
+    // field typed by it. Has no `: underlying_type` (the backing type is
+    // inferred from the largest discriminant).
+    inline_field_enum: $ => seq(
+      'enum',
+      field('name', $.identifier),
+      '{',
+      commaSep($.enum_variant_def),
+      '}',
     ),
 
     access_modifier: $ => choice('readonly', 'writeonly'),
@@ -364,6 +436,9 @@ module.exports = grammar({
       seq(field('object', $._lvalue), '.', field('field', $.identifier)),
       seq(field('object', $._lvalue), '[', field('index', $._expression), ']'),
       seq('*', field('target', $._expression)),
+      // beemel parses the LHS as an expression then peels parens in
+      // expr_to_lvalue, so a parenthesized place (`(*p).x = v`) stays assignable.
+      seq('(', $._expression, ')'),
     ),
 
     if_statement: $ => seq(
@@ -406,9 +481,12 @@ module.exports = grammar({
       '}',
     ),
 
+    // beemel eats an optional `,` after each arm body (parse_match_arms), so a
+    // separating/trailing comma is allowed. Shared by match statement + expr.
     match_arm: $ => seq(
       pipeSep1($.match_pattern),
       field('body', $.block),
+      optional(','),
     ),
 
     match_pattern: $ => choice(
@@ -427,7 +505,7 @@ module.exports = grammar({
       optional(';'),
     ),
 
-    asm_body: $ => seq('{', /[^}]*/, '}'),
+    // asm_body (the balanced `{ ... }`) is an external token -- see src/scanner.c.
 
     asm_sections: $ => prec.right(seq(
       ':',
@@ -601,8 +679,10 @@ module.exports = grammar({
       ']',
     ),
 
+    // The struct name may be module-qualified (`mod.Point { .. }`) -- beemel's
+    // postfix `{` arm fires when the base is a qualified_name (one dot).
     struct_expression: $ => seq(
-      field('name', $.identifier),
+      field('name', seq($.identifier, optional(seq('.', $.identifier)))),
       '{',
       commaSep($.struct_field_init),
       '}',
@@ -689,7 +769,13 @@ module.exports = grammar({
     // `addr in <region>`: an in-memory handoff slot (descriptor field).
     addr_type: $ => seq('addr', 'in', field('region', $.identifier)),
 
-    named_type: $ => $.identifier,
+    // A type name, optionally module-qualified (`module.Type`) for an imported
+    // type referenced via its import name or alias. beemel stores this as the
+    // single dotted string `"module.Type"` -- exactly one dot
+    // (parse_type_expr_inner). `prec.right` so the dot binds into the type name
+    // (e.g. `x as mod.T`) rather than splitting as `(x as mod).T`, matching
+    // beemel's greedy parse_type_expr.
+    named_type: $ => prec.right(seq($.identifier, optional(seq('.', $.identifier)))),
 
     pointer_type: $ => prec.left(seq('*', $._type)),
 
@@ -735,7 +821,10 @@ module.exports = grammar({
 
     // ─── Literals ─────────────────────────────────────────────────
 
-    identifier: $ => /[a-zA-Z_][a-zA-Z0-9_]*/,
+    // beemel: ASCII-only start (`[a-zA-Z_]`, lexer.rs:657) but a Unicode
+    // continuation (`is_alphanumeric()`, read_ident_range) -- so `caféVar`
+    // is a valid identifier while a non-ASCII first char is not.
+    identifier: $ => /[a-zA-Z_][\p{L}\p{N}_]*/u,
 
     integer_literal: $ => {
       const suffix = '(i8|i16|i32|i64|u8|u16|u32|u64)';
@@ -747,10 +836,12 @@ module.exports = grammar({
 
     boolean_literal: $ => choice('true', 'false'),
 
+    // beemel's read_string pushes any byte except `"`/`\` into the body, raw
+    // newlines included -- so the content run must not exclude `\n`.
     string_literal: $ => seq(
       '"',
       repeat(choice(
-        token.immediate(prec(1, /[^"\\\n]+/)),
+        token.immediate(prec(1, /[^"\\]+/)),
         $.escape_sequence,
       )),
       '"',
@@ -764,11 +855,7 @@ module.exports = grammar({
 
     line_comment: $ => token(seq('//', /.*/)),
 
-    block_comment: $ => token(seq(
-      '/*',
-      /[^*]*\*+([^/*][^*]*\*+)*/,
-      '/',
-    )),
+    // block_comment is an external token (src/scanner.c) so it can nest.
   },
 });
 

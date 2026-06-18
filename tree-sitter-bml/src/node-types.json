@@ -573,11 +573,6 @@
     }
   },
   {
-    "type": "asm_body",
-    "named": true,
-    "fields": {}
-  },
-  {
     "type": "asm_clobbers",
     "named": true,
     "fields": {},
@@ -1052,6 +1047,14 @@
         "required": true,
         "types": [
           {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
             "type": "*",
             "named": false
           },
@@ -1189,6 +1192,14 @@
         "multiple": true,
         "required": false,
         "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
           {
             "type": "*",
             "named": false
@@ -4052,6 +4063,10 @@
         {
           "type": "identifier",
           "named": true
+        },
+        {
+          "type": "integer_literal",
+          "named": true
         }
       ]
     }
@@ -4086,11 +4101,47 @@
       "required": true,
       "types": [
         {
+          "type": "addr_type",
+          "named": true
+        },
+        {
+          "type": "array_type",
+          "named": true
+        },
+        {
+          "type": "bits_type",
+          "named": true
+        },
+        {
+          "type": "function_pointer_type",
+          "named": true
+        },
+        {
+          "type": "inline_field_enum",
+          "named": true
+        },
+        {
           "type": "integer_literal",
           "named": true
         },
         {
+          "type": "mutable_pointer_type",
+          "named": true
+        },
+        {
           "type": "named_type",
+          "named": true
+        },
+        {
+          "type": "pointer_type",
+          "named": true
+        },
+        {
+          "type": "ring_type",
+          "named": true
+        },
+        {
+          "type": "view_type",
           "named": true
         }
       ]
@@ -5535,19 +5586,41 @@
     }
   },
   {
+    "type": "inline_field_enum",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "enum_variant_def",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "isr_annotation",
     "named": true,
     "fields": {},
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
       "types": [
         {
           "type": "isr_param",
-          "named": true
-        },
-        {
-          "type": "string_literal",
           "named": true
         }
       ]
@@ -5567,6 +5640,10 @@
         },
         {
           "type": "integer_literal",
+          "named": true
+        },
+        {
+          "type": "string_literal",
           "named": true
         }
       ]
@@ -6530,7 +6607,7 @@
     "named": true,
     "fields": {},
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": true,
       "types": [
         {
@@ -6677,6 +6754,68 @@
           "type": "integer_literal",
           "named": true
         },
+        {
+          "type": "register_definition",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "peripheral_instance",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "named_type",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "integer_literal",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "peripheral_type_definition",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
         {
           "type": "register_definition",
           "named": true
@@ -7353,6 +7492,14 @@
           "named": true
         },
         {
+          "type": "peripheral_instance",
+          "named": true
+        },
+        {
+          "type": "peripheral_type_definition",
+          "named": true
+        },
+        {
           "type": "register_definition",
           "named": true
         },
@@ -7625,9 +7772,13 @@
     "named": true,
     "fields": {
       "name": {
-        "multiple": false,
+        "multiple": true,
         "required": true,
         "types": [
+          {
+            "type": ".",
+            "named": false
+          },
           {
             "type": "identifier",
             "named": true
@@ -9118,6 +9269,10 @@
     "named": false
   },
   {
+    "type": "asm_body",
+    "named": true
+  },
+  {
     "type": "assert",
     "named": false
   },
@@ -9276,6 +9431,10 @@
     "named": false
   },
   {
+    "type": "mask",
+    "named": false
+  },
+  {
     "type": "match",
     "named": false
   },
@@ -9305,6 +9464,10 @@
   },
   {
     "type": "peripheral",
+    "named": false
+  },
+  {
+    "type": "peripheral_type",
     "named": false
   },
   {

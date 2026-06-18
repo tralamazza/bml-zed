@@ -1,0 +1,113 @@
+==================
+Qualified type names (module.Type) in var and cast
+==================
+fn f() @context(thread) {
+  var c: s.Color = s.make();
+  var d: u32 = x as mod.T;
+}
+---
+
+(source_file
+  (function_definition
+    name: (identifier)
+    parameters: (parameter_list)
+    (function_annotation
+      (context_annotation))
+    body: (block
+      (variable_declaration
+        name: (identifier)
+        type: (named_type
+          (identifier)
+          (identifier))
+        value: (call_expression
+          function: (field_expression
+            object: (identifier)
+            field: (identifier))
+          arguments: (argument_list)))
+      (variable_declaration
+        name: (identifier)
+        type: (named_type
+          (identifier))
+        value: (cast_expression
+          value: (identifier)
+          type: (named_type
+            (identifier)
+            (identifier)))))))
+
+==================
+Qualified type in struct field, parameter, and return
+==================
+struct Wrap { inner: pkg.Color }
+fn make(seed: rng.Seed) -> pkg.Color {}
+---
+
+(source_file
+  (struct_definition
+    name: (identifier)
+    (struct_field
+      name: (identifier)
+      type: (named_type
+        (identifier)
+        (identifier))))
+  (function_definition
+    name: (identifier)
+    parameters: (parameter_list
+      (parameter
+        name: (identifier)
+        type: (named_type
+          (identifier)
+          (identifier))))
+    return_type: (return_type
+      (named_type
+        (identifier)
+        (identifier)))
+    body: (block)))
+
+==================
+@extent with byte-scale and sub-field mask
+==================
+struct D @repr(C) {
+  addr: u32,
+  a: u32 @extent(addr),
+  b: u32 @extent(addr, x4),
+  c: u32 @extent(addr, mask 5),
+  d: u32 @extent(addr, x4, mask 5),
+}
+---
+
+(source_file
+  (struct_definition
+    name: (identifier)
+    (repr_annotation)
+    (struct_field
+      name: (identifier)
+      type: (named_type
+        (identifier)))
+    (struct_field
+      name: (identifier)
+      type: (named_type
+        (identifier))
+      (field_attribute
+        (identifier)))
+    (struct_field
+      name: (identifier)
+      type: (named_type
+        (identifier))
+      (field_attribute
+        (identifier)
+        (extent_multiplier)))
+    (struct_field
+      name: (identifier)
+      type: (named_type
+        (identifier))
+      (field_attribute
+        (identifier)
+        (integer_literal)))
+    (struct_field
+      name: (identifier)
+      type: (named_type
+        (identifier))
+      (field_attribute
+        (identifier)
+        (extent_multiplier)
+        (integer_literal)))))

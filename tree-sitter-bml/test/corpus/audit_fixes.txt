@@ -1,0 +1,160 @@
+==================
+@isr annotation: empty, label-only, and full ordered forms
+==================
+fn a() @isr() { }
+extern fn b() @isr("USART1");
+fn c() @isr("TIM2", priority = 3, tailchain = true) { }
+---
+
+(source_file
+  (function_definition
+    name: (identifier)
+    parameters: (parameter_list)
+    (function_annotation
+      (isr_annotation))
+    body: (block))
+  (extern_function_declaration
+    name: (identifier)
+    parameters: (parameter_list)
+    (function_annotation
+      (isr_annotation
+        (isr_param
+          (string_literal)))))
+  (function_definition
+    name: (identifier)
+    parameters: (parameter_list)
+    (function_annotation
+      (isr_annotation
+        (isr_param
+          (string_literal))
+        (isr_param
+          (integer_literal))
+        (isr_param
+          (boolean_literal))))
+    body: (block)))
+
+==================
+Qualified struct initialization (module.Struct { .. })
+==================
+fn f() @context(thread) { var p: u32 = lib.Point { x: 1, y: 2 }; }
+---
+
+(source_file
+  (function_definition
+    name: (identifier)
+    parameters: (parameter_list)
+    (function_annotation
+      (context_annotation))
+    body: (block
+      (variable_declaration
+        name: (identifier)
+        type: (named_type
+          (identifier))
+        value: (struct_expression
+          name: (identifier)
+          name: (identifier)
+          (struct_field_init
+            name: (identifier)
+            value: (integer_literal))
+          (struct_field_init
+            name: (identifier)
+            value: (integer_literal)))))))
+
+==================
+Comma-separated match arms and parenthesized-deref assignment target
+==================
+fn f() @context(thread) {
+  match x {
+    0 { a(); },
+    _ { b(); },
+  }
+  (*p).y = 1;
+}
+---
+
+(source_file
+  (function_definition
+    name: (identifier)
+    parameters: (parameter_list)
+    (function_annotation
+      (context_annotation))
+    body: (block
+      (match_statement
+        scrutinee: (identifier)
+        (match_arm
+          (match_pattern
+            value: (integer_literal))
+          body: (block
+            (expression_statement
+              (call_expression
+                function: (identifier)
+                arguments: (argument_list)))))
+        (match_arm
+          (match_pattern)
+          body: (block
+            (expression_statement
+              (call_expression
+                function: (identifier)
+                arguments: (argument_list))))))
+      (assignment_statement
+        object: (unary_expression
+          argument: (identifier))
+        field: (identifier)
+        right: (integer_literal)))))
+
+==================
+asm body with balanced inner braces (external scanner)
+==================
+fn f() @context(thread) { asm { mov r0, {r1} }; }
+---
+
+(source_file
+  (function_definition
+    name: (identifier)
+    parameters: (parameter_list)
+    (function_annotation
+      (context_annotation))
+    body: (block
+      (asm_statement
+        (asm_body)))))
+
+==================
+Nested block comment (external scanner)
+==================
+/* a /* b */ c */
+const K: u8 = 0;
+---
+
+(source_file
+  (block_comment)
+  (const_definition
+    name: (identifier)
+    type: (named_type
+      (identifier))
+    value: (integer_literal)))
+
+==================
+Multi-line string literal with a raw newline
+==================
+const S: u8 = 0;
+fn f() @context(thread) { log("line1
+line2"); }
+---
+
+(source_file
+  (const_definition
+    name: (identifier)
+    type: (named_type
+      (identifier))
+    value: (integer_literal))
+  (function_definition
+    name: (identifier)
+    parameters: (parameter_list)
+    (function_annotation
+      (context_annotation))
+    body: (block
+      (expression_statement
+        (call_expression
+          function: (identifier)
+          arguments: (argument_list
+            (string_literal)))))))
