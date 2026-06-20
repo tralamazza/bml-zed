@@ -1,0 +1,59 @@
+==================
+pio block, register array (count + stride), owns gpio range
+==================
+
+pio blink {
+    set pins, 1
+    jmp x--, lp [31]
+}
+
+peripheral_type PIO {
+    reg INSTR_MEM[32] offset 0x48 stride 0x4 {
+        field INSTR_MEM: u32 bit[0..15] writeonly
+    }
+    reg SM_CLKDIV[4] offset 0xC8 stride 0x18 {
+        field INT: u32 bit[16..31]
+    }
+}
+
+owns PIO0;
+owns gpio[0..3];
+
+---
+
+(source_file
+  (pio_definition
+    (identifier)
+    (pio_body))
+  (peripheral_type_definition
+    (identifier)
+    (register_definition
+      (identifier)
+      (integer_literal)
+      (integer_literal)
+      (integer_literal)
+      (field_definition
+        (identifier)
+        (named_type
+          (identifier))
+        (integer_literal)
+        (integer_literal)
+        (access_modifier)))
+    (register_definition
+      (identifier)
+      (integer_literal)
+      (integer_literal)
+      (integer_literal)
+      (field_definition
+        (identifier)
+        (named_type
+          (identifier))
+        (integer_literal)
+        (integer_literal))))
+  (owns_statement
+    (owns_path
+      (identifier)))
+  (owns_statement
+    (owns_path
+      (integer_literal)
+      (integer_literal))))

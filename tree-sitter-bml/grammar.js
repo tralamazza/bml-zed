@@ -32,6 +32,7 @@ module.exports = grammar({
   externals: $ => [
     $.block_comment,
     $.asm_body,
+    $.pio_body,
   ],
 
   word: $ => $.identifier,
@@ -76,6 +77,16 @@ module.exports = grammar({
       $.import_statement,
       $.owns_statement,
       $.comptime_assert,
+      $.pio_definition,
+    ),
+
+    // `pio NAME { ...raw PIO assembly... }` -- the body is a foreign 16-bit ISA
+    // captured verbatim by the external scanner (like asm_body), desugared by
+    // the compiler to `const NAME_PROGRAM: [u16; N]` + metadata consts.
+    pio_definition: $ => seq(
+      'pio',
+      field('name', $.identifier),
+      $.pio_body,
     ),
 
     // ─── Function definitions ─────────────────────────────────────
@@ -200,9 +211,13 @@ module.exports = grammar({
       ';',
     ),
 
-    owns_path: $ => seq(
-      field('peripheral', $.identifier),
-      optional(seq('.', field('register', $.identifier))),
+    owns_path: $ => choice(
+      seq(
+        field('peripheral', $.identifier),
+        optional(seq('.', field('register', $.identifier))),
+      ),
+      // `owns gpio[lo..hi]` -- an exclusive GPIO-pin range.
+      seq('gpio', '[', $.integer_literal, '..', $.integer_literal, ']'),
     ),
 
     // ─── comptime_assert ──────────────────────────────────────────
@@ -314,8 +329,12 @@ module.exports = grammar({
     register_definition: $ => seq(
       'reg',
       field('name', $.identifier),
+      // Register array: `reg NAME[N] offset O stride S` -- N registers at
+      // O, O+S, ..., reached as `P.NAME[i]`.
+      optional(seq('[', field('count', $.integer_literal), ']')),
       'offset',
       $.integer_literal,
+      optional(seq('stride', field('stride', $.integer_literal))),
       '{',
       repeat($.field_definition),
       '}',

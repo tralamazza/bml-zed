@@ -6623,7 +6623,7 @@
     "fields": {
       "peripheral": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "identifier",
@@ -6641,6 +6641,16 @@
           }
         ]
       }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "integer_literal",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -6818,6 +6828,32 @@
       "types": [
         {
           "type": "register_definition",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "pio_definition",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "pio_body",
           "named": true
         }
       ]
@@ -7002,12 +7038,32 @@
     "type": "register_definition",
     "named": true,
     "fields": {
+      "count": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "integer_literal",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": true,
         "types": [
           {
             "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "stride": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "integer_literal",
             "named": true
           }
         ]
@@ -7497,6 +7553,10 @@
         },
         {
           "type": "peripheral_type_definition",
+          "named": true
+        },
+        {
+          "type": "pio_definition",
           "named": true
         },
         {
@@ -9394,6 +9454,10 @@
     "named": false
   },
   {
+    "type": "gpio",
+    "named": false
+  },
+  {
     "type": "identifier",
     "named": true
   },
@@ -9469,6 +9533,14 @@
   {
     "type": "peripheral_type",
     "named": false
+  },
+  {
+    "type": "pio",
+    "named": false
+  },
+  {
+    "type": "pio_body",
+    "named": true
   },
   {
     "type": "priority",

@@ -8,13 +8,17 @@
 //   asm_body       -- the `{ ... }` body of an `asm` statement, where the body
 //                     may itself contain balanced `{ }` (beemel scans the body
 //                     with a brace-depth counter).
+//   pio_body       -- the `{ ... }` body of a `pio NAME { ... }` block, captured
+//                     verbatim (it is a foreign PIO ISA, not bml). Same balanced-
+//                     brace scan as asm_body.
 //
-// Both are self-contained tokens, so the scanner carries no cross-call state:
+// All are self-contained tokens, so the scanner carries no cross-call state:
 // create/destroy/serialize/deserialize are trivial.
 
 enum TokenType {
   BLOCK_COMMENT,
   ASM_BODY,
+  PIO_BODY,
 };
 
 void *tree_sitter_bml_external_scanner_create(void) { return NULL; }
@@ -71,8 +75,9 @@ static bool scan_block_comment(TSLexer *lexer) {
 }
 
 // `{ ... }` with balanced inner braces. Assumes the next char is `{`. Returns
-// false at EOF before the body closes.
-static bool scan_asm_body(TSLexer *lexer) {
+// false at EOF before the body closes. Shared by asm_body and pio_body, which
+// differ only in the result symbol.
+static bool scan_braced_body(TSLexer *lexer, enum TokenType symbol) {
   advance(lexer); // consume '{'
 
   unsigned depth = 1;
@@ -89,7 +94,7 @@ static bool scan_asm_body(TSLexer *lexer) {
     }
   }
 
-  lexer->result_symbol = ASM_BODY;
+  lexer->result_symbol = symbol;
   return true;
 }
 
@@ -104,7 +109,11 @@ bool tree_sitter_bml_external_scanner_scan(void *payload, TSLexer *lexer,
   while (is_space(lexer->lookahead)) skip(lexer);
 
   if (valid_symbols[ASM_BODY] && lexer->lookahead == '{') {
-    return scan_asm_body(lexer);
+    return scan_braced_body(lexer, ASM_BODY);
+  }
+
+  if (valid_symbols[PIO_BODY] && lexer->lookahead == '{') {
+    return scan_braced_body(lexer, PIO_BODY);
   }
 
   if (valid_symbols[BLOCK_COMMENT] && lexer->lookahead == '/') {
