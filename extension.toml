@@ -9,7 +9,7 @@ repository = "https://github.com/tralamazza/bml-zed"
 [grammars.bml]
 repository = "https://github.com/tralamazza/bml-zed"
 path = "tree-sitter-bml"
-rev = "fb56a1f2e45e3a5575d1ad4ce8330f544221c120"
+rev = "1fe7f76b4c41e9d65a3cd7ca673681c7dc072a8e"
 
 [language_servers.bml-lsp]
 name = "bml-lsp"
