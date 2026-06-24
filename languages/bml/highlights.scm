@@ -61,6 +61,7 @@
   "assume"
   "assert"
   "comptime_assert"
+  "comptime"
 ] @keyword
 
 ; ─── Storage modifier keywords ────────────────────────────────────

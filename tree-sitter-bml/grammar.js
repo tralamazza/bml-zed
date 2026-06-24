@@ -119,6 +119,7 @@ module.exports = grammar({
     ),
 
     parameter: $ => seq(
+      optional('comptime'),
       field('name', $.identifier),
       ':',
       field('type', $._type),
@@ -461,6 +462,7 @@ module.exports = grammar({
     ),
 
     if_statement: $ => seq(
+      optional('comptime'),
       'if',
       field('condition', $._expression),
       field('consequence', $.block),
@@ -493,6 +495,7 @@ module.exports = grammar({
     continue_statement: $ => seq('continue', ';'),
 
     match_statement: $ => seq(
+      optional('comptime'),
       'match',
       field('scrutinee', $._expression),
       '{',
@@ -694,7 +697,12 @@ module.exports = grammar({
 
     array_expression: $ => seq(
       '[',
-      commaSep($._expression),
+      optional(choice(
+        // repeat-init: `[value; count]`
+        seq(field('value', $._expression), ';', field('count', $._expression)),
+        // list: `[a, b, c]`
+        commaSep1($._expression),
+      )),
       ']',
     ),
 
@@ -718,6 +726,7 @@ module.exports = grammar({
     block_expression: $ => $.block,
 
     if_expression: $ => seq(
+      optional('comptime'),
       'if',
       field('condition', $._expression),
       field('consequence', $.block),
@@ -726,6 +735,7 @@ module.exports = grammar({
     ),
 
     match_expression: $ => seq(
+      optional('comptime'),
       'match',
       field('scrutinee', $._expression),
       '{',
